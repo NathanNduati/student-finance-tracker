@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Finance Tracker</title>
+  <link rel="stylesheet" href="styles/main.css">
+  <script type="module" src="scripts/app.js" defer></script>
+</head>
+<body>
+  
+  <a href="#main-app" class="skip-link">Skip to main content</a>
+
+  <header>
+    <h1>Campus Expense Tracker</h1>
+    <nav aria-label="Main Navigation">
+      <ul>
+        <li><a href="#dashboard">Overview</a></li>
+        <li><a href="#add-expense">Add Expense</a></li>
+        <li><a href="#history">History</a></li>
+        <li><a href="#settings">Settings</a></li>
+        <li><a href="#about">About</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <div id="screen-reader-alerts" aria-live="polite" class="sr-only"></div>
+
+  <main id="main-app">
+    
+    <section id="dashboard" aria-labelledby="dash-title">
+      <h2 id="dash-title">Monthly Overview</h2>
+      
+      <div class="dash-boxes">
+        <div class="box">
+          <h3>Total Spent</h3>
+          <p id="total-spent">Kshs 0.00</p>
+        </div>
+        <div class="box">
+          <h3>Top Category</h3>
+          <p id="top-cat">-</p>
+        </div>
+        <div class="box">
+          <h3>Budget Status</h3>
+          <p id="budget-status">No budget set</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="add-expense" aria-labelledby="form-title">
+      <h2 id="form-title">Log a New Expense</h2>
+      
+      <form id="expense-form" novalidate>
+        <input type="hidden" id="edit-id">
+        
+        <div class="input-row">
+          <label for="desc">What did you buy?</label>
+          <input type="text" id="desc" name="desc" required aria-describedby="desc-error">
+          <span id="desc-error" class="error-msg" role="alert"></span>
+        </div>
+
+        <div class="input-row">
+          <label for="cost">Amount (Kshs)</label>
+          <input type="number" id="cost" name="cost" step="0.01" required aria-describedby="cost-error">
+          <span id="cost-error" class="error-msg" role="alert"></span>
+        </div>
+
+        <div class="input-row">
+          <label for="cat">Category</label>
+          <select id="cat" name="cat" required>
+            <option value="Food">Food</option>
+            <option value="Books">Books</option>
+            <option value="Transport">Transport</option>
+            <option value="Entertainment">Entertainment</option>
+            <option value="Fees">Fees</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+
+        <div class="input-row">
+          <label for="date-bought">Date</label>
+          <input type="date" id="date-bought" name="date-bought" required aria-describedby="date-error">
+          <span id="date-error" class="error-msg" role="alert"></span>
+        </div>
+
+        <button type="submit" id="btn-save">Save Expense</button>
+      </form>
+    </section>
+
+    <section id="history" aria-labelledby="history-title">
+      <h2 id="history-title">Expense History</h2>
+      
+      <div class="search-area">
+        <label for="search-box">Live Regex Search:</label>
+        <input type="text" id="search-box" placeholder="e.g. coffee">
+        
+        <div class="sort-buttons">
+          <button data-sort="date" aria-label="Sort by Date">Sort Date ↕</button>
+          <button data-sort="desc" aria-label="Sort Alphabetically">Sort Description ↕</button>
+          <button data-sort="amount" aria-label="Sort by Price">Sort Price ↕</button>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <div id="table-output" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <section id="settings" aria-labelledby="settings-title">
+      <h2 id="settings-title">Settings</h2>
+      
+      <div class="settings-wrap">
+        <div class="budget-input input-row">
+          <label for="budget-limit">Set Monthly Budget (Kshs)</label>
+          <input type="number" id="budget-limit" step="10">
+          <button id="btn-update-budget">Save Budget</button>
+        </div>
+        
+        <div class="data-buttons" style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #ddd;">
+          <button id="btn-export">Export Data to JSON</button>
+          <label for="file-import" class="upload-btn">Import Data JSON</label>
+          <input type="file" id="file-import" accept=".json" class="sr-only">
+        </div>
+      </div>
+    </section>
+
+    <section id="about" aria-labelledby="about-title">
+      <h2 id="about-title">About Developer</h2>
+      <p>A pure Vanilla JavaScript student finance engine built for class evaluation requirements.</p>
+      <p>Developer Link: <a href="https://github.com/NathanNduati" target="_blank" rel="noopener">GitHub Profile</a></p>
+    </section>
+
+  </main>
+
+  <footer>
+    <p>&copy; 2026 Student Finance Project Ecosystem.</p>
+  </footer>
+</body>
+</html>
