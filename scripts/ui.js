@@ -1,112 +1,114 @@
-// ui.js - DOM Rendering Engine
+// ui.js - handle DOM updates, chart bars, and table drawing
 import { calculateTotalSpent, getBudgetLimit, getCurrentCurrency, convertAmount, getExpenses } from './state.js';
 import { highlightText } from './search.js';
 
-function getSymbol(currencyCode) {
-    if (currencyCode === 'USD') return '$';
-    if (currencyCode === 'EUR') return '€';
+function getSymbol(currency) {
+    if (currency === 'USD') return '$';
+    if (currency === 'EUR') return '€';
     return 'Kshs ';
 }
 
-// Main Dashboard Redraw Orchestrator
+// update main metrics boxes on dashboard view
 export function updateDashboardSummary() {
-    const totalSpentDisplay = document.getElementById('total-spent');
-    const budgetDisplay = document.getElementById('budget-status');
-    const topCatDisplay = document.getElementById('top-cat');
+    const spentText = document.getElementById('total-spent');
+    const budgetText = document.getElementById('budget-status');
+    const topCatText = document.getElementById('top-cat');
     
-    const activeCurrency = getCurrentCurrency();
-    const symbol = getSymbol(activeCurrency);
-    const expenses = getExpenses();
+    const curr = getCurrentCurrency();
+    const sym = getSymbol(curr);
+    const list = getExpenses();
 
-    const currentTotal = convertAmount(calculateTotalSpent());
-    const allowedBudget = convertAmount(getBudgetLimit());
+    const totalConverted = convertAmount(calculateTotalSpent());
+    const budgetConverted = convertAmount(getBudgetLimit());
 
-    // 1. Render Total Spent Card
-    if (totalSpentDisplay) {
-        totalSpentDisplay.textContent = `${symbol}${currentTotal.toFixed(2)}`;
+    if (spentText) {
+        spentText.textContent = `${sym}${totalConverted.toFixed(2)}`;
     }
 
-    // 2. Dynamic Top Category Counter
-    if (topCatDisplay) {
-        if (expenses.length === 0) {
-            topCatDisplay.textContent = "-";
+    // calculate top picked category string
+    if (topCatText) {
+        if (!list || list.length === 0) {
+            topCatText.textContent = "-";
         } else {
             const counts = {};
-            expenses.forEach(item => { counts[item.cat] = (counts[item.cat] || 0) + 1; });
-            const topCategory = Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b);
-            topCatDisplay.textContent = `${topCategory} (${counts[topCategory]}x)`;
+            list.forEach(item => {
+                counts[item.cat] = (counts[item.cat] || 0) + 1;
+            });
+            const top = Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b);
+            topCatText.textContent = `${top} (${counts[top]}x)`;
         }
     }
 
-    // 3. Render Budget Status
-    if (budgetDisplay) {
-        const rawBudget = getBudgetLimit();
-        if (rawBudget === 0) {
-            budgetDisplay.textContent = "No budget set";
-            budgetDisplay.style.color = "#94a3b8";
-            budgetDisplay.setAttribute('aria-live', 'polite');
-        } else if (currentTotal > allowedBudget) {
-            budgetDisplay.textContent = `Over Budget! (Max: ${symbol}${allowedBudget.toFixed(2)})`;
-            budgetDisplay.style.color = "#ef4444";
-            budgetDisplay.setAttribute('aria-live', 'assertive');
+    // handle budget message styles and aria-live status warnings
+    if (budgetText) {
+        const rawLimit = getBudgetLimit();
+        if (rawLimit === 0) {
+            budgetText.textContent = "No budget set";
+            budgetText.style.color = "#94a3b8";
+            budgetText.setAttribute('aria-live', 'polite');
+        } else if (totalConverted > budgetConverted) {
+            budgetText.textContent = `Over Budget! (Max: ${sym}${budgetConverted.toFixed(2)})`;
+            budgetText.style.color = "#ef4444";
+            budgetText.setAttribute('aria-live', 'assertive');
         } else {
-            const moneyLeft = allowedBudget - currentTotal;
-            budgetDisplay.textContent = `${symbol}${moneyLeft.toFixed(2)} Remaining`;
-            budgetDisplay.style.color = "#10b981";
-            budgetDisplay.setAttribute('aria-live', 'polite');
+            const remaining = budgetConverted - totalConverted;
+            budgetText.textContent = `${sym}${remaining.toFixed(2)} Remaining`;
+            budgetText.style.color = "#10b981";
+            budgetText.setAttribute('aria-live', 'polite');
         }
     }
 
-    // 4. Render 7-Day Spending Chart
-    renderTrendChart(expenses, symbol);
+    // run bar chart redraw operation safely
+    renderTrendChart(list, sym);
 }
 
-// Draws a lightweight visual bar graph using stable local date formatting
-function renderTrendChart(expenses, currencySymbol) {
-    const chartContainer = document.getElementById('trend-bar-chart');
-    if (!chartContainer) return;
+// generate the last 7 days visual chart bars dynamically
+function renderTrendChart(list, sym) {
+    const chartBox = document.getElementById('trend-bar-chart');
+    if (!chartBox) return;
 
-    chartContainer.innerHTML = '';
+    chartBox.innerHTML = '';
 
-    const spendingMap = {};
-    const displayLabels = [];
+    const tracking = {};
+    const labels = [];
 
-    // Safely generate the past 7 days tracking targets
+    // loop backwards from 6 to 0 to get chronological past 7 days matching keys
     for (let i = 6; i >= 0; i--) {
         const d = new Date();
         d.setDate(d.getDate() - i);
         
-        // Formats to YYYY-MM-DD reliably without ISO conversion timezone crashes
-        const year = d.getFullYear();
-        const month = String(d.getMonth() + 1).padStart(2, '0');
-        const day = String(d.getDate()).padStart(2, '0');
-        const dateKey = `${year}-${month}-${day}`;
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const dayKey = String(d.getDate()).padStart(2, '0');
+        const formattedKey = `${y}-${m}-${dayKey}`;
 
-        spendingMap[dateKey] = 0;
-        displayLabels.push({
-            key: dateKey,
-            shortLabel: d.toLocaleDateString('en', { weekday: 'short' })
+        tracking[formattedKey] = 0;
+        labels.push({
+            dateKey: formattedKey,
+            dayName: d.toLocaleDateString('en', { weekday: 'short' })
         });
     }
 
-    // Tally up matching records
-    expenses.forEach(item => {
-        if (spendingMap[item.date] !== undefined) {
-            spendingMap[item.date] += item.cost;
-        }
-    });
+    // sum up items logged on the matching calendar day key
+    if (list && list.length > 0) {
+        list.forEach(item => {
+            if (tracking[item.date] !== undefined) {
+                tracking[item.date] += item.cost;
+            }
+        });
+    }
 
-    const rawAmounts = Object.values(spendingMap);
-    const maxSpend = Math.max(...rawAmounts, 1);
+    const values = Object.values(tracking);
+    const highestPoint = Math.max(...values, 1);
 
-    // Build the visual chart pillars
-    displayLabels.forEach(dayObj => {
-        const dailyTotalKshs = spendingMap[dayObj.key];
-        const convertedTotal = convertAmount(dailyTotalKshs);
-        const heightPercentage = (dailyTotalKshs / maxSpend) * 100;
+    // append new elements into flex grid row
+    labels.forEach(day => {
+        const amountSpent = tracking[day.dateKey];
+        const dispAmount = convertAmount(amountSpent);
+        const barHeight = (amountSpent / highestPoint) * 100;
 
-        const barColumn = document.createElement('div');
-        barColumn.style.cssText = `
+        const col = document.createElement('div');
+        col.style.cssText = `
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -115,66 +117,66 @@ function renderTrendChart(expenses, currencySymbol) {
             justify-content: flex-end;
         `;
 
-        barColumn.innerHTML = `
-            <span style="font-size: 0.75rem; color: #64748b; margin-bottom: 4px;">
-                ${dailyTotalKshs > 0 ? `${currencySymbol}${convertedTotal.toFixed(0)}` : ''}
+        col.innerHTML = `
+            <span style="font-size: 0.7rem; color: #64748b; margin-bottom: 2px;">
+                ${amountSpent > 0 ? `${sym}${dispAmount.toFixed(0)}` : ''}
             </span>
             <div style="
-                width: 50%; 
-                height: ${Math.max(heightPercentage, 4)}%; 
-                background: ${dailyTotalKshs > 0 ? '#2563eb' : '#e2e8f0'}; 
-                border-radius: 4px 4px 0 0;
-                transition: height 0.3s ease;
+                width: 45%; 
+                height: ${Math.max(barHeight, 5)}%; 
+                background: ${amountSpent > 0 ? '#2563eb' : '#e2e8f0'}; 
+                border-radius: 3px 3px 0 0;
+                transition: height 0.2s ease;
             "></div>
-            <span style="font-size: 0.8rem; color: #64748b; font-weight: 500; margin-top: 8px;">
-                ${dayObj.shortLabel}
+            <span style="font-size: 0.75rem; color: #64748b; margin-top: 6px; font-weight: 500;">
+                ${day.dayName}
             </span>
         `;
-        chartContainer.appendChild(barColumn);
+        chartBox.appendChild(col);
     });
 }
 
-// Render dynamic rows inside your expense records view
-export function renderExpensesTable(expenses, deleteAction, activeSearchRegex = null) {
-    const tableBody = document.getElementById('table-output');
-    if (!tableBody) return;
+// write dynamic card list to history area
+export function renderExpensesTable(list, removeCallback, activeSearch = null) {
+    const displayTarget = document.getElementById('table-output');
+    if (!displayTarget) return;
     
-    tableBody.innerHTML = '';
+    displayTarget.innerHTML = '';
 
-    if (expenses.length === 0) {
-        tableBody.innerHTML = '<p style="padding: 1rem; color: #94a3b8;">No records match your view.</p>';
+    if (!list || list.length === 0) {
+        displayTarget.innerHTML = '<p style="padding: 1.25rem; color: #94a3b8; text-align: center;">No expenses match current filters.</p>';
         return;
     }
 
-    const activeCurrency = getCurrentCurrency();
-    const symbol = getSymbol(activeCurrency);
+    const currentCurrency = getCurrentCurrency();
+    const sym = getSymbol(currentCurrency);
 
-    expenses.forEach(item => {
-        const row = document.createElement('div');
-        row.className = 'expense-card-row';
+    list.forEach(item => {
+        const rowWrap = document.createElement('div');
+        rowWrap.className = 'expense-card-row';
         
-        const displayedCost = convertAmount(item.cost);
-        const cleanDesc = highlightText(item.desc, activeSearchRegex);
-        const cleanCat = highlightText(item.cat, activeSearchRegex);
+        const finalCost = convertAmount(item.cost);
+        const markedDesc = highlightText(item.desc, activeSearch);
+        const markedCat = highlightText(item.cat, activeSearch);
         
-        row.innerHTML = `
-            <div class="expense-details" style="padding: 0.75rem 0;">
-                <strong>${cleanDesc}</strong>
-                <span class="category-badge" style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-size: 0.8rem; margin-left: 0.5rem;">${cleanCat}</span>
+        rowWrap.innerHTML = `
+            <div class="expense-details">
+                <strong>${markedDesc}</strong>
+                <span class="category-badge" style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; margin-left: 0.5rem; font-weight: 500;">${markedCat}</span>
                 <small style="display: block; color: #94a3b8; margin-top: 4px;">${item.date}</small>
             </div>
             <div class="expense-cost-actions" style="display: flex; align-items: center; gap: 1rem;">
-                <span style="font-weight: 600;">${symbol}${displayedCost.toFixed(2)}</span>
-                <button class="delete-btn" style="background: #ef4444; color: white; border: none; padding: 4px 8px; cursor: pointer; border-radius: 4px;">Delete</button>
+                <span style="font-weight: 600;">${sym}${finalCost.toFixed(2)}</span>
+                <button class="delete-btn" style="background: #ef4444; color: white; border: none; padding: 4px 8px; cursor: pointer; border-radius: 4px; font-size: 0.8rem;">Delete</button>
             </div>
         `;
 
-        row.querySelector('.delete-btn').addEventListener('click', () => {
-            if(confirm("Are you sure you want to delete this record?")) {
-                deleteAction(item.id);
+        rowWrap.querySelector('.delete-btn').addEventListener('click', () => {
+            if (confirm("Remove this expense record?")) {
+                removeCallback(item.id);
             }
         });
 
-        tableBody.appendChild(row);
+        displayTarget.appendChild(rowWrap);
     });
 }
