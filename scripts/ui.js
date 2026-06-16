@@ -26,20 +26,19 @@ export function updateDashboardSummary() {
         totalSpentDisplay.textContent = `${symbol}${currentTotal.toFixed(2)}`;
     }
 
-    // 2. Milestone 5 Check: Dynamic Top Category Counter
+    // 2. Dynamic Top Category Counter
     if (topCatDisplay) {
         if (expenses.length === 0) {
             topCatDisplay.textContent = "-";
         } else {
             const counts = {};
             expenses.forEach(item => { counts[item.cat] = (counts[item.cat] || 0) + 1; });
-            // Sort by occurrence frequency to find the top chosen tag string
             const topCategory = Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b);
             topCatDisplay.textContent = `${topCategory} (${counts[topCategory]}x)`;
         }
     }
 
-    // 3. Render Budget Status and accessibility announcements
+    // 3. Render Budget Status
     if (budgetDisplay) {
         const rawBudget = getBudgetLimit();
         if (rawBudget === 0) {
@@ -58,48 +57,53 @@ export function updateDashboardSummary() {
         }
     }
 
-    // 4. Milestone 5 Check: Render Custom CSS 7-Day Spending Chart
+    // 4. Render 7-Day Spending Chart
     renderTrendChart(expenses, symbol);
 }
 
-// Draws a lightweight visual bar graph using DOM element wrappers
+// Draws a lightweight visual bar graph using stable local date formatting
 function renderTrendChart(expenses, currencySymbol) {
     const chartContainer = document.getElementById('trend-bar-chart');
     if (!chartContainer) return;
 
     chartContainer.innerHTML = '';
 
-    // Generate label strings for the past 7 days (including today)
-    const daysArray = [];
+    const spendingMap = {};
+    const displayLabels = [];
+
+    // Safely generate the past 7 days tracking targets
     for (let i = 6; i >= 0; i--) {
         const d = new Date();
         d.setDate(d.getDate() - i);
-        daysArray.push(d.toISOString().split('T')[0]); // Yields YYYY-MM-DD arrays
+        
+        // Formats to YYYY-MM-DD reliably without ISO conversion timezone crashes
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        const dateKey = `${year}-${month}-${day}`;
+
+        spendingMap[dateKey] = 0;
+        displayLabels.push({
+            key: dateKey,
+            shortLabel: d.toLocaleDateString('en', { weekday: 'short' })
+        });
     }
 
-    // Tally up financial totals spent uniquely on each specific day
-    const spendingMap = {};
-    daysArray.forEach(day => { spendingMap[day] = 0; });
-    
+    // Tally up matching records
     expenses.forEach(item => {
         if (spendingMap[item.date] !== undefined) {
             spendingMap[item.date] += item.cost;
         }
     });
 
-    // Find the single highest spending day peak to scale the bar heights proportionally
     const rawAmounts = Object.values(spendingMap);
-    const maxSpend = Math.max(...rawAmounts, 1); // Avoid dividing by zero if empty
+    const maxSpend = Math.max(...rawAmounts, 1);
 
-    // Construct the HTML pillars dynamically inside the flex layout box
-    daysArray.forEach(day => {
-        const dailyTotalKshs = spendingMap[day];
+    // Build the visual chart pillars
+    displayLabels.forEach(dayObj => {
+        const dailyTotalKshs = spendingMap[dayObj.key];
         const convertedTotal = convertAmount(dailyTotalKshs);
-        
-        // Convert to percentage ratio relative to your week's maximum ceiling day
         const heightPercentage = (dailyTotalKshs / maxSpend) * 100;
-        
-        const shortDayLabel = new Date(day).toLocaleDateString('en', { weekday: 'short' });
 
         const barColumn = document.createElement('div');
         barColumn.style.cssText = `
@@ -116,21 +120,21 @@ function renderTrendChart(expenses, currencySymbol) {
                 ${dailyTotalKshs > 0 ? `${currencySymbol}${convertedTotal.toFixed(0)}` : ''}
             </span>
             <div style="
-                width: 60%; 
+                width: 50%; 
                 height: ${Math.max(heightPercentage, 4)}%; 
-                background: ${dailyTotalKshs > 0 ? 'var(--primary-color, #2563eb)' : '#f1f5f9'}; 
+                background: ${dailyTotalKshs > 0 ? '#2563eb' : '#e2e8f0'}; 
                 border-radius: 4px 4px 0 0;
                 transition: height 0.3s ease;
             "></div>
             <span style="font-size: 0.8rem; color: #64748b; font-weight: 500; margin-top: 8px;">
-                ${shortDayLabel}
+                ${dayObj.shortLabel}
             </span>
         `;
         chartContainer.appendChild(barColumn);
     });
 }
 
-// Render dynamic rows inside your expense records view (with optional search regex)
+// Render dynamic rows inside your expense records view
 export function renderExpensesTable(expenses, deleteAction, activeSearchRegex = null) {
     const tableBody = document.getElementById('table-output');
     if (!tableBody) return;
