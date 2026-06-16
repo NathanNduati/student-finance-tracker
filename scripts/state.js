@@ -1,65 +1,92 @@
-// state.js - The Brains of the Operation
-// Written by Nathan Nduati (So I can finally track my campus cash)
-
+// state.js - Centralized State Management Engine
 import { saveData } from './storage.js';
 
-// Global app state variables
-let expensesList = [];
-let maxMonthlyBudget = 0;
+let state = {
+    expenses: [],
+    budgetLimit: 0,
+    currencyRates: { USD: 0.0077, EUR: 0.0071 }, // Manual exchange rates relative to 1 Kshs
+    currentCurrency: 'Kshs'                      // Active display currency
+};
 
-// Hydrate our state engine with whatever is saved in the locker
-export function initState(savedExpenses) {
-    expensesList = savedExpenses;
+// 1. Core State Initializer
+export function initState(loadedData) {
+    state = { ...state, ...loadedData };
 }
 
-// Security layers so other files can peek at data without breaking it
+// 2. Data Getters
 export function getExpenses() {
-    return expensesList;
+    return state.expenses;
 }
 
 export function getBudgetLimit() {
-    return maxMonthlyBudget;
+    return state.budgetLimit;
 }
 
-// --- APP ACTIONS ---
+export function getCurrentCurrency() {
+    return state.currentCurrency;
+}
 
-// Adds a new expense item to the active runtime list
-export function addExpense(description, amount, category, date) {
-    const uniqueId = 'item_' + Date.now(); // Keeps items separated perfectly
-    
+// 3. CURRENCY ACTIONS
+// Updates which currency the app is currently displaying
+export function setCurrency(currencyCode) {
+    if (currencyCode === 'Kshs' || state.currencyRates[currencyCode]) {
+        state.currentCurrency = currencyCode;
+        saveData(state);
+    }
+}
+
+// Updates the manual conversion rates in the settings configuration
+export function updateExchangeRates(usdRate, eurRate) {
+    if (usdRate > 0) state.currencyRates.USD = parseFloat(usdRate);
+    if (eurRate > 0) state.currencyRates.EUR = parseFloat(eurRate);
+    saveData(state);
+}
+
+// Converts any Kshs amount into the currently active display currency
+export function convertAmount(amountInKshs) {
+    if (state.currentCurrency === 'Kshs') return amountInKshs;
+    const rate = state.currencyRates[state.currentCurrency] || 1;
+    return amountInKshs * rate;
+}
+
+// 4. DATA MANIPULATION ACTIONS
+// Adds a new expense item with unique IDs and rubric timestamps
+export function addExpense(desc, cost, cat, date) {
+    const numericCost = parseFloat(cost);
+    if (isNaN(numericCost)) return;
+
+    // Generate a unique incremental serial ID (e.g., rec_171829384)
+    const uniqueId = `rec_${Date.now()}`;
+    const timestamp = new Date().toISOString();
+
     const newRecord = {
         id: uniqueId,
-        desc: description,
-        cost: parseFloat(amount),
-        cat: category,
-        date: date
-    };
+        desc: desc.trim(),
+        cost: numericCost, // Internally always store everything in base currency (Kshs)
+        cat: cat,
+        date: date,
+        createdAt: timestamp,
+        updatedAt: timestamp
+      };
 
-    expensesList.push(newRecord);
-    saveData(expensesList); // Syncing to local storage immediately
-    return newRecord;
+      state.expenses.push(newRecord);
+      saveData(state);
 }
 
-// Drops an item from the list by filtering it out
-export function deleteExpense(id) {
-    expensesList = expensesList.filter(item => item.id !== id);
-    saveData(expensesList); // Sync the update
+// Deletes a specific item via its record ID
+export function deleteExpense(idToDestroy) {
+    state.expenses = state.expenses.filter(item => item.id !== idToDestroy);
+    saveData(state);
 }
 
-// Set our upper budget cap
-export function updateBudgetLimit(amount) {
-    maxMonthlyBudget = parseFloat(amount) || 0;
+// Updates an existing budget cap limit value
+export function updateBudgetLimit(newLimit) {
+    const parsedLimit = parseFloat(newLimit);
+    state.budgetLimit = isNaN(parsedLimit) ? 0 : parsedLimit;
+    saveData(state);
 }
 
-// --- MATH & ACCOUNTING ---
-
-// Loops through the checklist to tally up the grand total
+// Computes the raw sum total spent in baseline currency (Kshs)
 export function calculateTotalSpent() {
-    let runningTotal = 0;
-    
-    for (let i = 0; i < expensesList.length; i++) {
-        runningTotal += expensesList[i].cost;
-    }
-    
-    return runningTotal;
+    return state.expenses.reduce((sum, item) => sum + item.cost, 0);
 }
