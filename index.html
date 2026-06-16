@@ -30,6 +30,7 @@
     
     <section id="dashboard" aria-labelledby="dash-title">
       <h2 id="dash-title">Monthly Overview</h2>
+      
       <div class="dash-boxes">
         <div class="box">
           <h3>Total Spent</h3>
@@ -44,6 +45,12 @@
           <p id="budget-status">No budget set</p>
         </div>
       </div>
+
+      <div class="chart-wrapper" style="margin-top: 2rem; padding: 1.5rem; background: #fff; border-radius: 8px; border: 1px solid #ddd;">
+        <h3 style="margin-bottom: 1rem; font-size: 1.1rem; color: #1e293b;">7-Day Spending Trend</h3>
+        <div id="trend-bar-chart" style="display: flex; align-items: flex-end; justify-content: space-between; height: 150px; padding-top: 1rem;">
+          </div>
+      </div>
     </section>
 
     <section id="add-expense" aria-labelledby="form-title">
@@ -54,13 +61,13 @@
         <div class="input-row">
           <label for="desc">What did you buy?</label>
           <input type="text" id="desc" name="desc" required aria-describedby="desc-error">
-          <span id="desc-error" class="error-msg" role="alert"></span>
+          <span id="desc-error" class="error-msg" role="alert" style="color: #ef4444; display: block; font-size: 0.85rem; margin-top: 4px;"></span>
         </div>
 
         <div class="input-row">
           <label for="cost">Amount (Kshs)</label>
           <input type="number" id="cost" name="cost" step="0.01" required aria-describedby="cost-error">
-          <span id="cost-error" class="error-msg" role="alert"></span>
+          <span id="cost-error" class="error-msg" role="alert" style="color: #ef4444; display: block; font-size: 0.85rem; margin-top: 4px;"></span>
         </div>
 
         <div class="input-row">
@@ -78,7 +85,7 @@
         <div class="input-row">
           <label for="date-bought">Date</label>
           <input type="date" id="date-bought" name="date-bought" required aria-describedby="date-error">
-          <span id="date-error" class="error-msg" role="alert"></span>
+          <span id="date-error" class="error-msg" role="alert" style="color: #ef4444; display: block; font-size: 0.85rem; margin-top: 4px;"></span>
         </div>
 
         <button type="submit" id="btn-save">Save Expense</button>
@@ -88,14 +95,14 @@
     <section id="history" aria-labelledby="history-title">
       <h2 id="history-title">Expense History</h2>
       
-      <div class="search-area">
-        <label for="search-box">Live Regex Search:</label>
-        <input type="text" id="search-box" placeholder="e.g. coffee">
+      <div class="search-area" style="margin-bottom: 1.5rem;">
+        <label for="search-box" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Live Regex Search:</label>
+        <input type="text" id="search-box" placeholder="e.g. coffee" style="width: 100%; padding: 8px; margin-bottom: 1rem; border: 1px solid #ddd; border-radius: 4px;">
         
-        <div class="sort-buttons">
-          <button data-sort="date" aria-label="Sort by Date">Sort Date ↕</button>
-          <button data-sort="desc" aria-label="Sort Alphabetically">Sort Description ↕</button>
-          <button data-sort="amount" aria-label="Sort by Price">Sort Price ↕</button>
+        <div class="sort-buttons" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+          <button data-sort="date" type="button" aria-label="Sort by Date">Sort Date ↕</button>
+          <button data-sort="desc" type="button" aria-label="Sort Alphabetically">Sort Description ↕</button>
+          <button data-sort="amount" type="button" aria-label="Sort by Price">Sort Price ↕</button>
         </div>
       </div>
 
@@ -111,13 +118,13 @@
         <div class="budget-input input-row">
           <label for="budget-limit">Set Monthly Budget (Kshs)</label>
           <input type="number" id="budget-limit" step="10">
-          <button id="btn-update-budget">Save Budget</button>
+          <button id="btn-update-budget" type="button">Save Budget</button>
         </div>
         
-        <div class="data-buttons" style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #ddd;">
-          <button id="btn-export">Export Data to JSON</button>
-          <label for="file-import" class="upload-btn">Import Data JSON</label>
-          <input type="file" id="file-import" accept=".json" class="sr-only">
+        <div class="data-buttons" style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #ddd; display: flex; gap: 1rem; align-items: center;">
+          <button id="btn-export" type="button">Export Data to JSON</button>
+          <label for="file-import" class="upload-btn" style="background: #e2e8f0; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-size: 0.9rem;">Import Data JSON</label>
+          <input type="file" id="file-import" accept=".json" class="sr-only" style="display: none;">
         </div>
 
         <div class="currency-settings" style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #ddd;">

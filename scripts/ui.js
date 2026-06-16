@@ -1,6 +1,6 @@
 // ui.js - DOM Rendering Engine
-import { calculateTotalSpent, getBudgetLimit, getCurrentCurrency, convertAmount } from './state.js';
-import { highlightText } from './search.js'; // <-- Import the highlighter function
+import { calculateTotalSpent, getBudgetLimit, getCurrentCurrency, convertAmount, getExpenses } from './state.js';
+import { highlightText } from './search.js';
 
 function getSymbol(currencyCode) {
     if (currencyCode === 'USD') return '$';
@@ -8,23 +8,40 @@ function getSymbol(currencyCode) {
     return 'Kshs ';
 }
 
+// Main Dashboard Redraw Orchestrator
 export function updateDashboardSummary() {
     const totalSpentDisplay = document.getElementById('total-spent');
     const budgetDisplay = document.getElementById('budget-status');
+    const topCatDisplay = document.getElementById('top-cat');
     
     const activeCurrency = getCurrentCurrency();
     const symbol = getSymbol(activeCurrency);
+    const expenses = getExpenses();
 
     const currentTotal = convertAmount(calculateTotalSpent());
     const allowedBudget = convertAmount(getBudgetLimit());
 
+    // 1. Render Total Spent Card
     if (totalSpentDisplay) {
         totalSpentDisplay.textContent = `${symbol}${currentTotal.toFixed(2)}`;
     }
 
+    // 2. Milestone 5 Check: Dynamic Top Category Counter
+    if (topCatDisplay) {
+        if (expenses.length === 0) {
+            topCatDisplay.textContent = "-";
+        } else {
+            const counts = {};
+            expenses.forEach(item => { counts[item.cat] = (counts[item.cat] || 0) + 1; });
+            // Sort by occurrence frequency to find the top chosen tag string
+            const topCategory = Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b);
+            topCatDisplay.textContent = `${topCategory} (${counts[topCategory]}x)`;
+        }
+    }
+
+    // 3. Render Budget Status and accessibility announcements
     if (budgetDisplay) {
         const rawBudget = getBudgetLimit();
-        
         if (rawBudget === 0) {
             budgetDisplay.textContent = "No budget set";
             budgetDisplay.style.color = "#94a3b8";
@@ -40,11 +57,81 @@ export function updateDashboardSummary() {
             budgetDisplay.setAttribute('aria-live', 'polite');
         }
     }
+
+    // 4. Milestone 5 Check: Render Custom CSS 7-Day Spending Chart
+    renderTrendChart(expenses, symbol);
+}
+
+// Draws a lightweight visual bar graph using DOM element wrappers
+function renderTrendChart(expenses, currencySymbol) {
+    const chartContainer = document.getElementById('trend-bar-chart');
+    if (!chartContainer) return;
+
+    chartContainer.innerHTML = '';
+
+    // Generate label strings for the past 7 days (including today)
+    const daysArray = [];
+    for (let i = 6; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        daysArray.push(d.toISOString().split('T')[0]); // Yields YYYY-MM-DD arrays
+    }
+
+    // Tally up financial totals spent uniquely on each specific day
+    const spendingMap = {};
+    daysArray.forEach(day => { spendingMap[day] = 0; });
+    
+    expenses.forEach(item => {
+        if (spendingMap[item.date] !== undefined) {
+            spendingMap[item.date] += item.cost;
+        }
+    });
+
+    // Find the single highest spending day peak to scale the bar heights proportionally
+    const rawAmounts = Object.values(spendingMap);
+    const maxSpend = Math.max(...rawAmounts, 1); // Avoid dividing by zero if empty
+
+    // Construct the HTML pillars dynamically inside the flex layout box
+    daysArray.forEach(day => {
+        const dailyTotalKshs = spendingMap[day];
+        const convertedTotal = convertAmount(dailyTotalKshs);
+        
+        // Convert to percentage ratio relative to your week's maximum ceiling day
+        const heightPercentage = (dailyTotalKshs / maxSpend) * 100;
+        
+        const shortDayLabel = new Date(day).toLocaleDateString('en', { weekday: 'short' });
+
+        const barColumn = document.createElement('div');
+        barColumn.style.cssText = `
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+            height: 100%;
+            justify-content: flex-end;
+        `;
+
+        barColumn.innerHTML = `
+            <span style="font-size: 0.75rem; color: #64748b; margin-bottom: 4px;">
+                ${dailyTotalKshs > 0 ? `${currencySymbol}${convertedTotal.toFixed(0)}` : ''}
+            </span>
+            <div style="
+                width: 60%; 
+                height: ${Math.max(heightPercentage, 4)}%; 
+                background: ${dailyTotalKshs > 0 ? 'var(--primary-color, #2563eb)' : '#f1f5f9'}; 
+                border-radius: 4px 4px 0 0;
+                transition: height 0.3s ease;
+            "></div>
+            <span style="font-size: 0.8rem; color: #64748b; font-weight: 500; margin-top: 8px;">
+                ${shortDayLabel}
+            </span>
+        `;
+        chartContainer.appendChild(barColumn);
+    });
 }
 
 // Render dynamic rows inside your expense records view (with optional search regex)
 export function renderExpensesTable(expenses, deleteAction, activeSearchRegex = null) {
-    // Targets the exact 'table-output' element from your index.html
     const tableBody = document.getElementById('table-output');
     if (!tableBody) return;
     
@@ -63,8 +150,6 @@ export function renderExpensesTable(expenses, deleteAction, activeSearchRegex = 
         row.className = 'expense-card-row';
         
         const displayedCost = convertAmount(item.cost);
-        
-        // Highlight matched text in the description or category if a search is active
         const cleanDesc = highlightText(item.desc, activeSearchRegex);
         const cleanCat = highlightText(item.cat, activeSearchRegex);
         
