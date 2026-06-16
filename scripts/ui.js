@@ -105,30 +105,35 @@ function renderTrendChart(list, sym) {
     labels.forEach(day => {
         const amountSpent = tracking[day.dateKey];
         const dispAmount = convertAmount(amountSpent);
-        const barHeight = (amountSpent / highestPoint) * 100;
+        
+        // Force a concrete mathematical pixel ceiling for visual bars
+        const maxBarHeightPixels = 80; 
+        const barHeight = (amountSpent / highestPoint) * maxBarHeightPixels;
 
         const col = document.createElement('div');
         col.style.cssText = `
             display: flex;
             flex-direction: column;
             align-items: center;
-            flex: 1;
-            height: 100%;
             justify-content: flex-end;
+            flex: 1;
+            height: 140px; 
+            min-width: 35px;
         `;
 
         col.innerHTML = `
-            <span style="font-size: 0.7rem; color: #64748b; margin-bottom: 2px;">
+            <span style="font-size: 0.7rem; color: #64748b; margin-bottom: 4px; font-weight: 600; min-height: 14px; display: block; text-align: center;">
                 ${amountSpent > 0 ? `${sym}${dispAmount.toFixed(0)}` : ''}
             </span>
             <div style="
-                width: 45%; 
-                height: ${Math.max(barHeight, 5)}%; 
-                background: ${amountSpent > 0 ? '#2563eb' : '#e2e8f0'}; 
+                width: 20px; 
+                height: ${Math.max(barHeight, 6)}px; 
+                background: ${amountSpent > 0 ? '#2563eb' : '#cbd5e1'}; 
                 border-radius: 3px 3px 0 0;
                 transition: height 0.2s ease;
+                display: block;
             "></div>
-            <span style="font-size: 0.75rem; color: #64748b; margin-top: 6px; font-weight: 500;">
+            <span style="font-size: 0.75rem; color: #64748b; margin-top: 8px; font-weight: 600; display: block; text-align: center;">
                 ${day.dayName}
             </span>
         `;
