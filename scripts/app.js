@@ -2,9 +2,15 @@
 import { loadData, saveData, exportStateToJSON, validateAndImportJSON } from './storage.js';
 import { initState, addExpense, deleteExpense, updateBudgetLimit, getExpenses, setCurrency, updateExchangeRates } from './state.js';
 import { updateDashboardSummary, renderExpensesTable } from './ui.js';
-import { validateExpenseForm } from './validators.js'; // <-- Importing your custom validators
+import { validateExpenseForm } from './validators.js';
+import { compileSearchRegex, sortRecords } from './search.js'; // <-- Import sorting/search utilities
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Search and Sort tracking state variables
+    let currentSortColumn = 'date';
+    let isSortAscending = false; // Default to newest dates first
+    let activeSearchQuery = '';
+
     // 1. Fire up database memory state
     const savedRecords = loadData();
     initState(savedRecords);
@@ -15,7 +21,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const sections = document.querySelectorAll('main > section');
 
     if (navLinks.length > 0 && sections.length > 0) {
-        // Force default view to dashboard tab on load
         sections.forEach(sec => {
             sec.style.display = (sec.id === 'dashboard') ? 'block' : 'none';
         });
@@ -32,7 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 3. Add Expense Submission Form (WITH REGEX VALIDATION)
+    // 3. Add Expense Submission Form
     const form = document.getElementById('expense-form');
     if (form) {
         form.addEventListener('submit', (event) => {
@@ -43,7 +48,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const catEl = document.getElementById('cat');
             const dateEl = document.getElementById('date-bought');
 
-            // Clear old error messages from the UI first
             document.querySelectorAll('.error-msg').forEach(span => span.textContent = '');
 
             if (descEl && costEl && catEl && dateEl) {
@@ -52,16 +56,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 const catVal = catEl.value;
                 const pickedDate = dateEl.value ? dateEl.value : new Date().toLocaleDateString();
                 
-                // Run inputs through your Regex Checker function
                 const validation = validateExpenseForm(descVal, costVal, pickedDate, catVal);
 
                 if (validation.isValid) {
-                    // Validation passed! Save it to storage.
                     addExpense(descVal, costVal, catVal, pickedDate);
                     form.reset();
                     refreshScreen();
                 } else {
-                    // Validation failed! Show the specific errors under the inputs
                     if (validation.errors.desc) document.getElementById('desc-error').textContent = validation.errors.desc;
                     if (validation.errors.cost) document.getElementById('cost-error').textContent = validation.errors.cost;
                     if (validation.errors.date) document.getElementById('date-error').textContent = validation.errors.date;
@@ -127,12 +128,49 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // 7. Live Search Input Typing Listener
+    const searchBox = document.getElementById('search-box');
+    if (searchBox) {
+        searchBox.addEventListener('input', (e) => {
+            activeSearchQuery = e.target.value;
+            refreshScreen();
+        });
+    }
+
+    // 8. Sorting Header Click Listeners
+    const sortButtons = document.querySelectorAll('.sort-buttons button');
+    sortButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const targetSortColumn = button.getAttribute('data-sort');
+            
+            if (currentSortColumn === targetSortColumn) {
+                // Toggle sorting direction if clicking the same column again
+                isSortAscending = !isSortAscending;
+            } else {
+                currentSortColumn = targetSortColumn;
+                isSortAscending = true;
+            }
+            refreshScreen();
+        });
+    });
+
     // --- Helper Refresh Macros ---
     function refreshScreen() {
-        const outputContainer = document.getElementById('table-output');
-        if (outputContainer) {
-            renderExpensesTable(getExpenses(), handleTrashClick);
+        let records = getExpenses();
+
+        // Safe evaluation of regex pattern strings
+        const searchRegex = compileSearchRegex(activeSearchQuery);
+        if (searchRegex) {
+            records = records.filter(item => 
+                searchRegex.test(item.desc) || searchRegex.test(item.cat)
+            );
         }
+
+        // Apply sorting criteria
+        const sortedRecords = sortRecords(records, currentSortColumn, isSortAscending);
+
+        // Render sorted and highlighted records to view window
+        renderExpensesTable(sortedRecords, handleTrashClick, searchRegex);
         updateDashboardSummary();
     }
 

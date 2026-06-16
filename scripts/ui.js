@@ -1,96 +1,89 @@
-// ui.js - Upgraded UI Rendering Engine
-// Handles dynamic currency displaying, tables, and totals
-
+// ui.js - DOM Rendering Engine
 import { calculateTotalSpent, getBudgetLimit, getCurrentCurrency, convertAmount } from './state.js';
+import { highlightText } from './search.js'; // <-- Import the highlighter function
 
-// Helper function to get the correct currency prefix symbol
-function getCurrencySymbol(currencyCode) {
-    switch(currencyCode) {
-        case 'USD': return '$';
-        case 'EUR': return '€';
-        default: return 'Kshs ';
-    }
+function getSymbol(currencyCode) {
+    if (currencyCode === 'USD') return '$';
+    if (currencyCode === 'EUR') return '€';
+    return 'Kshs ';
 }
 
-// 1. Tally up the totals and update the dashboard layout cards dynamically
 export function updateDashboardSummary() {
     const totalSpentDisplay = document.getElementById('total-spent');
     const budgetDisplay = document.getElementById('budget-status');
     
     const activeCurrency = getCurrentCurrency();
-    const symbol = getCurrencySymbol(activeCurrency);
+    const symbol = getSymbol(activeCurrency);
 
-    // Convert baseline Kshs numbers to the active display currency
     const currentTotal = convertAmount(calculateTotalSpent());
     const allowedBudget = convertAmount(getBudgetLimit());
 
-    // Update total spent card text
     if (totalSpentDisplay) {
         totalSpentDisplay.textContent = `${symbol}${currentTotal.toFixed(2)}`;
     }
 
-    // Figure out the budget card text, status colors, and screen-reader accessibility rules
     if (budgetDisplay) {
-        const rawBudget = getBudgetLimit(); // Check the original limit to see if a budget is set
+        const rawBudget = getBudgetLimit();
         
         if (rawBudget === 0) {
             budgetDisplay.textContent = "No budget set";
-            budgetDisplay.style.color = "#94a3b8"; // Neutral slate grey
+            budgetDisplay.style.color = "#94a3b8";
             budgetDisplay.setAttribute('aria-live', 'polite');
         } else if (currentTotal > allowedBudget) {
-            // Rubric Cap/Target Check: Assertive alert for overage warnings
             budgetDisplay.textContent = `Over Budget! (Max: ${symbol}${allowedBudget.toFixed(2)})`;
-            budgetDisplay.style.color = "#ef4444"; // Warning Red
+            budgetDisplay.style.color = "#ef4444";
             budgetDisplay.setAttribute('aria-live', 'assertive');
         } else {
-            // Rubric Cap/Target Check: Polite update for remaining balance
             const moneyLeft = allowedBudget - currentTotal;
             budgetDisplay.textContent = `${symbol}${moneyLeft.toFixed(2)} Remaining`;
-            budgetDisplay.style.color = "#10b981"; // Safe Green
+            budgetDisplay.style.color = "#10b981";
             budgetDisplay.setAttribute('aria-live', 'polite');
         }
     }
 }
 
-// 2. Draw the dynamic data items right into our HTML rows with currency support
-export function renderExpensesTable(expenses, deleteAction) {
-    const tableBody = document.getElementById('expense-records');
-    
+// Render dynamic rows inside your expense records view (with optional search regex)
+export function renderExpensesTable(expenses, deleteAction, activeSearchRegex = null) {
+    // Targets the exact 'table-output' element from your index.html
+    const tableBody = document.getElementById('table-output');
     if (!tableBody) return;
     
     tableBody.innerHTML = '';
 
     if (expenses.length === 0) {
-        tableBody.innerHTML = '<p style="padding: 1rem; color: #94a3b8;">No expenses tracked yet.</p>';
+        tableBody.innerHTML = '<p style="padding: 1rem; color: #94a3b8;">No records match your view.</p>';
         return;
     }
 
     const activeCurrency = getCurrentCurrency();
-    const symbol = getCurrencySymbol(activeCurrency);
+    const symbol = getSymbol(activeCurrency);
 
-    // Loop through every expense object and append a fresh HTML row block
     expenses.forEach(item => {
         const row = document.createElement('div');
         row.className = 'expense-card-row';
         
-        // Convert the item's stored Kshs value to the active currency on the fly
         const displayedCost = convertAmount(item.cost);
         
+        // Highlight matched text in the description or category if a search is active
+        const cleanDesc = highlightText(item.desc, activeSearchRegex);
+        const cleanCat = highlightText(item.cat, activeSearchRegex);
+        
         row.innerHTML = `
-            <div class="expense-details">
-                <strong>${item.desc}</strong>
-                <span class="category-badge">${item.cat}</span>
-                <small style="display: block; color: #94a3b8;">${item.date}</small>
+            <div class="expense-details" style="padding: 0.75rem 0;">
+                <strong>${cleanDesc}</strong>
+                <span class="category-badge" style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-size: 0.8rem; margin-left: 0.5rem;">${cleanCat}</span>
+                <small style="display: block; color: #94a3b8; margin-top: 4px;">${item.date}</small>
             </div>
             <div class="expense-cost-actions" style="display: flex; align-items: center; gap: 1rem;">
-                <span>${symbol}${displayedCost.toFixed(2)}</span>
+                <span style="font-weight: 600;">${symbol}${displayedCost.toFixed(2)}</span>
                 <button class="delete-btn" style="background: #ef4444; color: white; border: none; padding: 4px 8px; cursor: pointer; border-radius: 4px;">Delete</button>
             </div>
         `;
 
-        // Attach a quick click event straight to the row's specific delete button
         row.querySelector('.delete-btn').addEventListener('click', () => {
-            deleteAction(item.id);
+            if(confirm("Are you sure you want to delete this record?")) {
+                deleteAction(item.id);
+            }
         });
 
         tableBody.appendChild(row);
