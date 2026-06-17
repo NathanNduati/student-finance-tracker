@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Regex Validation Unit Tests</title>
+    <style>
+        body { font-family: sans-serif; margin: 2rem; background: #f8fafc; color: #334155; }
+        h1 { color: #1e293b; }
+        .test-case { padding: 0.5rem; margin: 0.25rem 0; border-radius: 4px; display: flex; justify-content: space-between; }
+        .pass { background: #dcfce7; color: #15803d; }
+        .fail { background: #fee2e2; color: #991b1b; }
+        .summary { font-weight: bold; margin-top: 1rem; font-size: 1.1rem; }
+    </style>
+</head>
+<body>
+
+    <h1>Form Regex Assertion Suite</h1>
+    <p>This page tests our Milestone 3 regular expression patterns in isolation against hardcoded test strings.</p>
+    
+    <div id="test-output"></div>
+    <div id="test-summary" class="summary"></div>
+
+    <script type="module">
+        const rules = {
+            desc: /^[a-zA-Z0-9]+( [a-zA-Z0-9]+)*$/, 
+            cost: /^[0-9]+(\.[0-9]{1,2})?$/,       
+            cat: /^[a-zA-Z\s-]+$/,                 
+            doubleWord: /\b(\w+)\s+\1\b/           
+        };
+
+        const testCases = [
+            { name: "Valid Description", regex: rules.desc, string: "Campus Lunch", expected: true },
+            { name: "Description with Leading Space", regex: rules.desc, string: " Dinner", expected: false },
+            { name: "Description with Double Spaces", regex: rules.desc, string: "Bus  Fare", expected: false },
+            { name: "Valid Whole Number Amount", regex: rules.cost, string: "250", expected: true },
+            { name: "Valid Decimal Amount", regex: rules.cost, string: "45.50", expected: true },
+            { name: "Amount with Letters", regex: rules.cost, string: "100kshs", expected: false },
+            { name: "Amount with Too Many Decimals", regex: rules.cost, string: "10.555", expected: false },
+            { name: "Valid Category", regex: rules.cat, string: "Entertainment", expected: true },
+            { name: "Category with Special Characters", regex: rules.cat, string: "Food & Drinks", expected: false },
+            { name: "Clean Phrase (No Duplicate words)", regex: rules.doubleWord, string: "Bought lunch notebook", expected: false },
+            { name: "Duplicate Typos (Should match/flag mistake)", regex: rules.doubleWord, string: "Lunch Lunch", expected: true }
+        ];
+
+        const outputContainer = document.getElementById('test-output');
+        let passedCount = 0;
+
+        testCases.forEach(t => {
+            const rawResult = t.regex.test(t.string);
+            const isMatchCorrect = rawResult === t.expected;
+
+            if (isMatchCorrect) passedCount++;
+
+            const div = document.createElement('div');
+            div.className = `test-case ${isMatchCorrect ? 'pass' : 'fail'}`;
+            div.innerHTML = `
+                <span><strong>${t.name}</strong> - Target String: <em>"${t.string}"</em></span>
+                <span>${isMatchCorrect ? 'PASSED ✅' : 'FAILED ❌'}</span>
+            `;
+            outputContainer.appendChild(div);
+        });
+
+        document.getElementById('test-summary').textContent = 
+            `Summary: ${passedCount} out of ${testCases.length} assertions verified successfully.`;
+    </script>
+</body>
+</html>

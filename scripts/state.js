@@ -1,92 +1,88 @@
-// state.js - Centralized State Management Engine
-import { saveData } from './storage.js';
+// state.js - managing the local data array values
+let expensesArray = [];
+let monthlyBudgetLimit = 0;
+let activeCurrency = 'Kshs';
 
-let state = {
-    expenses: [],
-    budgetLimit: 0,
-    currencyRates: { USD: 0.0077, EUR: 0.0071 }, // Manual exchange rates relative to 1 Kshs
-    currentCurrency: 'Kshs'                      // Active display currency
+let rates = {
+    USD: 0.0077,
+    EUR: 0.0071
 };
 
-// 1. Core State Initializer
-export function initState(loadedData) {
-    state = { ...state, ...loadedData };
-}
-
-// 2. Data Getters
-export function getExpenses() {
-    return state.expenses;
-}
-
-export function getBudgetLimit() {
-    return state.budgetLimit;
-}
-
-export function getCurrentCurrency() {
-    return state.currentCurrency;
-}
-
-// 3. CURRENCY ACTIONS
-// Updates which currency the app is currently displaying
-export function setCurrency(currencyCode) {
-    if (currencyCode === 'Kshs' || state.currencyRates[currencyCode]) {
-        state.currentCurrency = currencyCode;
-        saveData(state);
+export function initState(loadedRecords) {
+    if (loadedRecords && Array.isArray(loadedRecords.expenses)) {
+        expensesArray = loadedRecords.expenses;
+    } else {
+        expensesArray = [];
+    }
+    
+    if (loadedRecords && loadedRecords.budget) {
+        monthlyBudgetLimit = parseFloat(loadedRecords.budget) || 0;
+    } else {
+        monthlyBudgetLimit = 0;
     }
 }
 
-// Updates the manual conversion rates in the settings configuration
-export function updateExchangeRates(usdRate, eurRate) {
-    if (usdRate > 0) state.currencyRates.USD = parseFloat(usdRate);
-    if (eurRate > 0) state.currencyRates.EUR = parseFloat(eurRate);
-    saveData(state);
+export function getExpenses() {
+    return expensesArray;
 }
 
-// Converts any Kshs amount into the currently active display currency
-export function convertAmount(amountInKshs) {
-    if (state.currentCurrency === 'Kshs') return amountInKshs;
-    const rate = state.currencyRates[state.currentCurrency] || 1;
-    return amountInKshs * rate;
-}
-
-// 4. DATA MANIPULATION ACTIONS
-// Adds a new expense item with unique IDs and rubric timestamps
 export function addExpense(desc, cost, cat, date) {
-    const numericCost = parseFloat(cost);
-    if (isNaN(numericCost)) return;
-
-    // Generate a unique incremental serial ID (e.g., rec_171829384)
-    const uniqueId = `rec_${Date.now()}`;
-    const timestamp = new Date().toISOString();
-
-    const newRecord = {
-        id: uniqueId,
-        desc: desc.trim(),
-        cost: numericCost, // Internally always store everything in base currency (Kshs)
+    const newItem = {
+        id: Date.now(),
+        desc: desc,
+        cost: parseFloat(cost) || 0,
         cat: cat,
-        date: date,
-        createdAt: timestamp,
-        updatedAt: timestamp
-      };
-
-      state.expenses.push(newRecord);
-      saveData(state);
+        date: date
+    };
+    expensesArray.push(newItem);
+    saveToLocalStorageSync();
 }
 
-// Deletes a specific item via its record ID
-export function deleteExpense(idToDestroy) {
-    state.expenses = state.expenses.filter(item => item.id !== idToDestroy);
-    saveData(state);
+export function deleteExpense(id) {
+    expensesArray = expensesArray.filter(x => x.id !== id);
+    saveToLocalStorageSync();
 }
 
-// Updates an existing budget cap limit value
-export function updateBudgetLimit(newLimit) {
-    const parsedLimit = parseFloat(newLimit);
-    state.budgetLimit = isNaN(parsedLimit) ? 0 : parsedLimit;
-    saveData(state);
+export function updateBudgetLimit(amt) {
+    monthlyBudgetLimit = parseFloat(amt) || 0;
+    saveToLocalStorageSync();
 }
 
-// Computes the raw sum total spent in baseline currency (Kshs)
+export function getBudgetLimit() {
+    return monthlyBudgetLimit;
+}
+
 export function calculateTotalSpent() {
-    return state.expenses.reduce((sum, item) => sum + item.cost, 0);
+    let sum = 0;
+    for(let i = 0; i < expensesArray.length; i++) {
+        sum += expensesArray[i].cost;
+    }
+    return sum;
+}
+
+export function setCurrency(code) {
+    activeCurrency = code;
+}
+
+export function getCurrentCurrency() {
+    return activeCurrency;
+}
+
+export function updateExchangeRates(usdRate, eurRate) {
+    rates.USD = parseFloat(usdRate) || 0.0077;
+    rates.EUR = parseFloat(eurRate) || 0.0071;
+}
+
+export function convertAmount(amtInKshs) {
+    if (activeCurrency === 'USD') return amtInKshs * rates.USD;
+    if (activeCurrency === 'EUR') return amtInKshs * rates.EUR;
+    return amtInKshs;
+}
+
+function saveToLocalStorageSync() {
+    const completeSnapshot = {
+        expenses: expensesArray,
+        budget: monthlyBudgetLimit
+    };
+    localStorage.setItem('campus_finance_records', JSON.stringify(completeSnapshot));
 }

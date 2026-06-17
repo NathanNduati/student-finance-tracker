@@ -1,181 +1,175 @@
-// app.js - Main Application Workflow Manager
+// app.js - main controller for coordinating events and view routes
 import { loadData, saveData, exportStateToJSON, validateAndImportJSON } from './storage.js';
 import { initState, addExpense, deleteExpense, updateBudgetLimit, getExpenses, setCurrency, updateExchangeRates } from './state.js';
 import { updateDashboardSummary, renderExpensesTable } from './ui.js';
 import { validateExpenseForm } from './validators.js';
-import { compileSearchRegex, sortRecords } from './search.js'; // <-- Import sorting/search utilities
+import { compileSearchRegex, sortRecords } from './search.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Search and Sort tracking state variables
-    let currentSortColumn = 'date';
-    let isSortAscending = false; // Default to newest dates first
-    let activeSearchQuery = '';
+    // track state for search text and active sort columns
+    let activeSort = 'date';
+    let ascOrder = false; 
+    let queryText = '';
 
-    // 1. Fire up database memory state
-    const savedRecords = loadData();
-    initState(savedRecords);
+    // load layout data from storage
+    const initialRecords = loadData();
+    initState(initialRecords);
     refreshScreen();
 
-    // 2. Single Page Navigation Router Logic
-    const navLinks = document.querySelectorAll('nav ul li a');
-    const sections = document.querySelectorAll('main > section');
+    // HANDMADE TAB ROUTER
+    const links = document.querySelectorAll('nav ul li a');
+    const tabs = document.querySelectorAll('main > section');
 
-    if (navLinks.length > 0 && sections.length > 0) {
-        sections.forEach(sec => {
-            sec.style.display = (sec.id === 'dashboard') ? 'block' : 'none';
+    if (links.length > 0 && tabs.length > 0) {
+        tabs.forEach(t => {
+            t.style.display = (t.id === 'dashboard') ? 'block' : 'none';
         });
 
-        navLinks.forEach(link => {
-            link.addEventListener('click', (event) => {
-                event.preventDefault();
-                const targetId = link.getAttribute('href').substring(1);
+        links.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const target = link.getAttribute('href').substring(1);
 
-                sections.forEach(section => {
-                    section.style.display = (section.id === targetId) ? 'block' : 'none';
-                });
+                // manual standard for loop to toggle display strings
+                for (let i = 0; i < tabs.length; i++) {
+                    if (tabs[i].id === target) {
+                        tabs[i].style.display = 'block';
+                    } else {
+                        tabs[i].style.display = 'none';
+                    }
+                }
             });
         });
     }
 
-    // 3. Add Expense Submission Form
-    const form = document.getElementById('expense-form');
-    if (form) {
-        form.addEventListener('submit', (event) => {
-            event.preventDefault();
+    // NEW TRANSACTION SUBMIT HANDLER
+    const expenseForm = document.getElementById('expense-form');
+    if (expenseForm) {
+        expenseForm.addEventListener('submit', (e) => {
+            e.preventDefault();
 
-            const descEl = document.getElementById('desc');
-            const costEl = document.getElementById('cost');
-            const catEl = document.getElementById('cat');
-            const dateEl = document.getElementById('date-bought');
+            const itemDesc = document.getElementById('desc').value;
+            const itemCost = document.getElementById('cost').value;
+            const itemCat = document.getElementById('cat').value;
+            const itemDate = document.getElementById('date-bought').value;
 
-            document.querySelectorAll('.error-msg').forEach(span => span.textContent = '');
+            // reset validation errors spans
+            document.getElementById('desc-error').textContent = '';
+            document.getElementById('cost-error').textContent = '';
+            document.getElementById('date-error').textContent = '';
 
-            if (descEl && costEl && catEl && dateEl) {
-                const descVal = descEl.value;
-                const costVal = costEl.value;
-                const catVal = catEl.value;
-                const pickedDate = dateEl.value ? dateEl.value : new Date().toLocaleDateString();
-                
-                const validation = validateExpenseForm(descVal, costVal, pickedDate, catVal);
+            const check = validateExpenseForm(itemDesc, itemCost, itemDate, itemCat);
 
-                if (validation.isValid) {
-                    addExpense(descVal, costVal, catVal, pickedDate);
-                    form.reset();
-                    refreshScreen();
-                } else {
-                    if (validation.errors.desc) document.getElementById('desc-error').textContent = validation.errors.desc;
-                    if (validation.errors.cost) document.getElementById('cost-error').textContent = validation.errors.cost;
-                    if (validation.errors.date) document.getElementById('date-error').textContent = validation.errors.date;
-                }
+            if (check.isValid === true) {
+                addExpense(itemDesc, itemCost, itemCat, itemDate);
+                expenseForm.reset();
+                refreshScreen();
+            } else {
+                if (check.errors.desc) document.getElementById('desc-error').textContent = check.errors.desc;
+                if (check.errors.cost) document.getElementById('cost-error').textContent = check.errors.cost;
+                if (check.errors.date) document.getElementById('date-error').textContent = check.errors.date;
             }
         });
     }
 
-    // 4. Save General Budget Overage Cap Limit
-    const budgetBtn = document.getElementById('btn-update-budget');
-    const budgetInput = document.getElementById('budget-limit');
-    if (budgetBtn && budgetInput) {
-        budgetBtn.addEventListener('click', () => {
-            updateBudgetLimit(budgetInput.value);
+    // UPDATE BUDGET LIMIT 
+    const saveBudgetBtn = document.getElementById('btn-update-budget');
+    if (saveBudgetBtn) {
+        saveBudgetBtn.addEventListener('click', () => {
+            const limitInput = document.getElementById('budget-limit').value;
+            updateBudgetLimit(limitInput);
             refreshScreen();
         });
     }
 
-    // 5. Save Currency Selection and Manual Exchange Configurations
-    const saveCurrencyBtn = document.getElementById('btn-save-rates');
-    if (saveCurrencyBtn) {
-        saveCurrencyBtn.addEventListener('click', () => {
-            const chosenCurrency = document.getElementById('currency-select').value;
-            const currentUsdRate = document.getElementById('rate-usd').value;
-            const currentEurRate = document.getElementById('rate-eur').value;
+    // UPDATE EXCHANGES AND TARGET CURRENCY
+    const ratesBtn = document.getElementById('btn-save-rates');
+    if (ratesBtn) {
+        ratesBtn.addEventListener('click', () => {
+            const selectBox = document.getElementById('currency-select').value;
+            const usdVal = document.getElementById('rate-usd').value;
+            const eurVal = document.getElementById('rate-eur').value;
 
-            updateExchangeRates(currentUsdRate, currentEurRate);
-            setCurrency(chosenCurrency);
+            updateExchangeRates(usdVal, eurVal);
+            setCurrency(selectBox);
             refreshScreen();
         });
     }
 
-    // 6. Data Backup Import & Export Handlers
-    const exportBtn = document.getElementById('btn-export');
-    if (exportBtn) {
-        exportBtn.addEventListener('click', () => {
-            const currentData = loadData();
-            exportStateToJSON(currentData);
+    // DOWNLOAD STATE SNAPSHOT
+    const exportDataBtn = document.getElementById('btn-export');
+    if (exportDataBtn) {
+        exportDataBtn.addEventListener('click', () => {
+            const backup = loadData();
+            exportStateToJSON(backup);
         });
     }
 
-    const importInput = document.getElementById('file-import');
-    if (importInput) {
-        importInput.addEventListener('change', (event) => {
-            const uploadedFile = event.target.files[0];
-            if (!uploadedFile) return;
+    // UPLOAD DATA FILE SNAPSHOT
+    const importDataInput = document.getElementById('file-import');
+    if (importDataInput) {
+        importDataInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
 
             const reader = new FileReader();
-            reader.onload = (e) => {
-                const rawText = e.target.result;
-                const validatedData = validateAndImportJSON(rawText);
+            reader.onload = (event) => {
+                const text = event.target.result;
+                const parsed = validateAndImportJSON(text);
 
-                if (validatedData) {
-                    saveData(validatedData);
-                    initState(validatedData);
+                if (parsed) {
+                    saveData(parsed);
+                    initState(parsed);
                     refreshScreen();
                     alert("Data backup imported successfully!");
                 } else {
-                    alert("Error: Invalid or corrupted JSON backup file structure.");
+                    alert("Error: Bad file backup data structure layout.");
                 }
             };
-            reader.readAsText(uploadedFile);
+            reader.readAsText(file);
         });
     }
 
-    // 7. Live Search Input Typing Listener
-    const searchBox = document.getElementById('search-box');
-    if (searchBox) {
-        searchBox.addEventListener('input', (e) => {
-            activeSearchQuery = e.target.value;
+    // LISTEN TO TYPING EVENTS IN SEARCH BOX
+    const inputSearch = document.getElementById('search-box');
+    if (inputSearch) {
+        inputSearch.addEventListener('input', (e) => {
+            queryText = e.target.value;
             refreshScreen();
         });
     }
 
-    // 8. Sorting Header Click Listeners
-    const sortButtons = document.querySelectorAll('.sort-buttons button');
-    sortButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            const targetSortColumn = button.getAttribute('data-sort');
-            
-            if (currentSortColumn === targetSortColumn) {
-                // Toggle sorting direction if clicking the same column again
-                isSortAscending = !isSortAscending;
+    // SORT BUTTON CLICK TRIGGERS
+    const actionSortBtns = document.querySelectorAll('.sort-buttons button');
+    actionSortBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const col = btn.getAttribute('data-sort');
+            if (activeSort === col) {
+                ascOrder = !ascOrder;
             } else {
-                currentSortColumn = targetSortColumn;
-                isSortAscending = true;
+                activeSort = col;
+                ascOrder = true;
             }
             refreshScreen();
         });
     });
 
-    // --- Helper Refresh Macros ---
+    // operational refresh utility macro
     function refreshScreen() {
-        let records = getExpenses();
+        let rows = getExpenses();
 
-        // Safe evaluation of regex pattern strings
-        const searchRegex = compileSearchRegex(activeSearchQuery);
-        if (searchRegex) {
-            records = records.filter(item => 
-                searchRegex.test(item.desc) || searchRegex.test(item.cat)
-            );
+        const regexCompiler = compileSearchRegex(queryText);
+        if (regexCompiler) {
+            rows = rows.filter(x => regexCompiler.test(x.desc) || regexCompiler.test(x.cat));
         }
 
-        // Apply sorting criteria
-        const sortedRecords = sortRecords(records, currentSortColumn, isSortAscending);
-
-        // Render sorted and highlighted records to view window
-        renderExpensesTable(sortedRecords, handleTrashClick, searchRegex);
+        const sorted = sortRecords(rows, activeSort, ascOrder);
+        renderExpensesTable(sorted, runDeleteAction, regexCompiler);
         updateDashboardSummary();
     }
 
-    function handleTrashClick(idToDestroy) {
-        deleteExpense(idToDestroy);
+    function runDeleteAction(id) {
+        deleteExpense(id);
         refreshScreen();
     }
 });

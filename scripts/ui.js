@@ -8,7 +8,6 @@ function getSymbol(currency) {
     return 'Kshs ';
 }
 
-// update main metrics boxes on dashboard view
 export function updateDashboardSummary() {
     const spentText = document.getElementById('total-spent');
     const budgetText = document.getElementById('budget-status');
@@ -25,21 +24,19 @@ export function updateDashboardSummary() {
         spentText.textContent = `${sym}${totalConverted.toFixed(2)}`;
     }
 
-    // calculate top picked category string
+    // calculate top category label tally strings
     if (topCatText) {
         if (!list || list.length === 0) {
             topCatText.textContent = "-";
         } else {
             const counts = {};
-            list.forEach(item => {
-                counts[item.cat] = (counts[item.cat] || 0) + 1;
-            });
+            list.forEach(item => { counts[item.cat] = (counts[item.cat] || 0) + 1; });
             const top = Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b);
             topCatText.textContent = `${top} (${counts[top]}x)`;
         }
     }
 
-    // handle budget message styles and aria-live status warnings
+    // budget warnings logic and styling checks
     if (budgetText) {
         const rawLimit = getBudgetLimit();
         if (rawLimit === 0) {
@@ -58,11 +55,10 @@ export function updateDashboardSummary() {
         }
     }
 
-    // run bar chart redraw operation safely
     renderTrendChart(list, sym);
 }
 
-// generate the last 7 days visual chart bars dynamically
+// compute past 7 tracking values and build explicit pixel height nodes
 function renderTrendChart(list, sym) {
     const chartBox = document.getElementById('trend-bar-chart');
     if (!chartBox) return;
@@ -72,7 +68,7 @@ function renderTrendChart(list, sym) {
     const tracking = {};
     const labels = [];
 
-    // loop backwards from 6 to 0 to get chronological past 7 days matching keys
+    // loop back manually 6 days from today
     for (let i = 6; i >= 0; i--) {
         const d = new Date();
         d.setDate(d.getDate() - i);
@@ -89,7 +85,6 @@ function renderTrendChart(list, sym) {
         });
     }
 
-    // sum up items logged on the matching calendar day key
     if (list && list.length > 0) {
         list.forEach(item => {
             if (tracking[item.date] !== undefined) {
@@ -101,12 +96,10 @@ function renderTrendChart(list, sym) {
     const values = Object.values(tracking);
     const highestPoint = Math.max(...values, 1);
 
-    // append new elements into flex grid row
     labels.forEach(day => {
         const amountSpent = tracking[day.dateKey];
         const dispAmount = convertAmount(amountSpent);
         
-        // Force a concrete mathematical pixel ceiling for visual bars
         const maxBarHeightPixels = 80; 
         const barHeight = (amountSpent / highestPoint) * maxBarHeightPixels;
 
@@ -141,7 +134,6 @@ function renderTrendChart(list, sym) {
     });
 }
 
-// write dynamic card list to history area
 export function renderExpensesTable(list, removeCallback, activeSearch = null) {
     const displayTarget = document.getElementById('table-output');
     if (!displayTarget) return;
