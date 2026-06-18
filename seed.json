@@ -1,0 +1,95 @@
+{
+  "budget": 15000.00,
+  "expenses": [
+    {
+      "id": "rec_1001",
+      "desc": "KU Mess Lunch",
+      "cost": 150.00,
+      "cat": "Food",
+      "date": "2026-06-12",
+      "createdAt": "2026-06-12T10:15:30.000Z",
+      "updatedAt": "2026-06-12T10:15:30.000Z"
+    },
+    {
+      "id": "rec_1002",
+      "desc": "Calculus SMA 104 Notebook",
+      "cost": 450.00,
+      "cat": "Books",
+      "date": "2026-06-12",
+      "createdAt": "2026-06-12T11:22:00.000Z",
+      "updatedAt": "2026-06-12T11:22:00.000Z"
+    },
+    {
+      "id": "rec_1003",
+      "desc": "Bus Fare to Nairobi CBD",
+      "cost": 120.00,
+      "cat": "Transport",
+      "date": "2026-06-13",
+      "createdAt": "2026-06-13T07:05:12.000Z",
+      "updatedAt": "2026-06-13T07:05:12.000Z"
+    },
+    {
+      "id": "rec_1004",
+      "desc": "Movie Night with Friends",
+      "cost": 800.00,
+      "cat": "Entertainment",
+      "date": "2026-06-14",
+      "createdAt": "2026-06-14T19:40:00.000Z",
+      "updatedAt": "2026-06-14T19:40:00.000Z"
+    },
+    {
+      "id": "rec_1005",
+      "desc": "Lab Practical Fee Clearance",
+      "cost": 5500.00,
+      "cat": "Fees",
+      "date": "2026-06-15",
+      "createdAt": "2026-06-15T09:00:00.000Z",
+      "updatedAt": "2026-06-15T14:30:22.000Z"
+    },
+    {
+      "id": "rec_1006",
+      "desc": "Inorganic Chemistry Printout",
+      "cost": 75.50,
+      "cat": "Books",
+      "date": "2026-06-15",
+      "createdAt": "2026-06-15T10:11:45.000Z",
+      "updatedAt": "2026-06-15T10:11:45.000Z"
+    },
+    {
+      "id": "rec_1007",
+      "desc": "Campus Hostel Room Key Replacement",
+      "cost": 1200.00,
+      "cat": "Other",
+      "date": "2026-06-16",
+      "createdAt": "2026-06-16T08:30:00.000Z",
+      "updatedAt": "2026-06-16T08:30:00.000Z"
+    },
+    {
+      "id": "rec_1008",
+      "desc": "Fast Food Dinner Typos Dinner",
+      "cost": 350.00,
+      "cat": "Food",
+      "date": "2026-06-16",
+      "createdAt": "2026-06-16T20:15:00.000Z",
+      "updatedAt": "2026-06-16T20:15:00.000Z"
+    },
+    {
+      "id": "rec_1009",
+      "desc": "Motorbike Bodaboda Ride to Gate A",
+      "cost": 50.00,
+      "cat": "Transport",
+      "date": "2026-06-17",
+      "createdAt": "2026-06-17T11:02:10.000Z",
+      "updatedAt": "2026-06-17T11:02:10.000Z"
+    },
+    {
+      "id": "rec_1010",
+      "desc": "Engineering Mechanics Reference Guide",
+      "cost": 2450.00,
+      "cat": "Books",
+      "date": "2026-06-17",
+      "createdAt": "2026-06-17T15:45:00.000Z",
+      "updatedAt": "2026-06-17T15:45:00.000Z"
+    }
+  ]
+}
