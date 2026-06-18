@@ -1,5 +1,4 @@
 {
-  "budget": 15000.00,
   "expenses": [
     {
       "id": "rec_1001",
@@ -91,5 +90,8 @@
       "createdAt": "2026-06-17T15:45:00.000Z",
       "updatedAt": "2026-06-17T15:45:00.000Z"
     }
-  ]
+  ],
+  "budgetLimit": 15000.00,
+  "currencyRates": { "USD": 0.0077, "EUR": 0.0071 },
+  "currentCurrency": "Kshs"
 }
