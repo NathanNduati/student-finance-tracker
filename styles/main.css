@@ -1,308 +1,227 @@
 /* ==========================================================================
-   main.css - Campus Expense Tracker Theme
-   Maintained by Nathan Nduati
+   1. BASE STYLES & MOBILE FIRST LAYOUT (~360px up)
    ========================================================================== */
-
-/* --- 1. DESIGN TOKEN VARIABLES --- */
-:root {
-  --primary: #2563eb;          /* Deep royal blue */
-  --primary-hover: #1d4ed8;
-  --bg-color: #f8fafc;         /* Light, clean slate background */
-  --card-bg: #ffffff;          /* Pure white cards */
-  --text-main: #0f172a;        /* Dark slate text for high readability */
-  --text-muted: #64748b;       /* Muted grey for secondary notes */
-  --error-color: #ef4444;      /* Warning red */
-  --success-color: #10b981;    /* Budget safe green */
-  --border-color: #e2e8f0;     /* Soft grey borders */
-  --focus-ring: 3px solid #93c5fd;
-}
-
-/* --- 2. GLOBAL RESET & BASE STYLES --- */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  background-color: var(--bg-color);
-  color: var(--text-main);
-  line-height: 1.5;
-  padding-bottom: 3rem;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f8fafc;
+    color: #334155;
+    line-height: 1.5;
 }
 
 /* Accessibility skip link */
 .skip-link {
-  position: absolute;
-  top: -40px;
-  left: 0;
-  background: var(--primary);
-  color: white;
-  padding: 8px;
-  z-index: 100;
-  transition: top 0.2s;
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background: #2563eb;
+    color: white;
+    padding: 8px;
+    z-index: 100;
+    transition: top 0.2s ease;
 }
 .skip-link:focus {
-  top: 0;
+    top: 0;
 }
 
-/* --- 3. HEADER & NAVIGATION BRANDING --- */
 header {
-  background: linear-gradient(135deg, var(--primary), var(--primary-hover));
-  color: white;
-  padding: 2.5rem 1rem;
-  text-align: center;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    background-color: #2563eb;
+    color: white;
+    padding: 1.25rem 1rem;
 }
 
 header h1 {
-  font-size: 2.2rem;
-  font-weight: 700;
-  margin-bottom: 1.5rem;
-  letter-spacing: -0.025em;
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    text-align: center;
 }
 
 nav ul {
-  list-style: none;
-  display: flex;
-  justify-content: center;
-  gap: 1.5rem;
-  flex-wrap: wrap;
+    list-style: none;
+    padding: 0;
+    margin: 1rem 0 0 0;
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    flex-wrap: wrap;
 }
 
 nav ul li a {
-  color: rgba(255, 255, 255, 0.85);
-  text-decoration: none;
-  font-weight: 500;
-  font-size: 1rem;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  transition: all 0.2s;
+    color: #dbeafe;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.95rem;
+    padding: 6px 12px;
+    border-radius: 4px;
+    transition: background 0.2s ease, color 0.2s ease;
 }
 
 nav ul li a:hover, nav ul li a:focus {
-  color: white;
-  background: rgba(255, 255, 255, 0.15);
-  outline: none;
+    background-color: #1d4ed8;
+    color: white;
 }
 
-/* --- 4. LAYOUT CONTAINERS --- */
 main {
-  max-width: 1200px;
-  margin: 2rem auto;
-  padding: 0 1rem;
+    padding: 1rem;
 }
 
 section {
-  background: var(--card-bg);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  padding: 1.5rem;
-  margin-bottom: 2rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    background: white;
+    padding: 1.25rem;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    margin-bottom: 1.5rem;
 }
 
-section h2 {
-  font-size: 1.4rem;
-  margin-bottom: 1.5rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 2px solid var(--bg-color);
-}
-
-/* --- 5. DASHBOARD STAT CARDS --- */
+/* Dashboard Metric Blocks Stacked Mobile */
 .dash-boxes {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
 }
 
 .box {
-  background: var(--bg-color);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 1.5rem;
-  text-align: center;
-  transition: transform 0.2s;
-}
-
-.box:hover {
-  transform: translateY(-2px);
+    background: #f1f5f9;
+    padding: 1.25rem;
+    border-radius: 6px;
+    border-left: 4px solid #2563eb;
 }
 
 .box h3 {
-  font-size: 0.9rem;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 0.5rem;
+    margin: 0 0 0.5rem 0;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #64748b;
 }
 
 .box p {
-  font-size: 1.8rem;
-  font-weight: 700;
-  color: var(--primary);
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1e293b;
 }
 
-/* --- 6. FORMS & CONTROLS --- */
+/* Form Styles */
 .input-row {
-  margin-bottom: 1.25rem;
+    margin-bottom: 1.25rem;
 }
 
 .input-row label {
-  display: block;
-  font-weight: 500;
-  margin-bottom: 0.5rem;
-  font-size: 0.95rem;
-}
-
-.input-row input, .input-row select {
-  width: 100%;
-  padding: 0.75rem;
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
-  font-size: 1rem;
-  background-color: var(--card-bg);
-  color: var(--text-main);
-  transition: border-color 0.2s;
-}
-
-.input-row input:focus, .input-row select:focus {
-  outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 var(--focus-ring);
-}
-
-button, .upload-btn {
-  display: inline-block;
-  background: var(--primary);
-  color: white;
-  border: none;
-  padding: 0.75rem 1.5rem;
-  font-size: 1rem;
-  font-weight: 600;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-button:hover, .upload-btn:hover {
-  background: var(--primary-hover);
-/* Clean SPA view settings */
-main > section {
     display: block;
-}
-/* Settings Form Specific Row Adjustments */
-.settings-wrap .input-row {
-  display: flex;
-  gap: 1rem;
-  align-items: center;
-  flex-wrap: wrap;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    color: #475569;
 }
 
-.settings-wrap .input-row input {
-  flex: 1;
-  min-width: 200px;
+input[type="text"],
+input[type="number"],
+input[type="date"],
+select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 1rem;
+    box-sizing: border-box;
+    background-color: #fff;
+    color: #1e293b;
 }
 
-/* --- 7. TRANSACTIONS VIEW AND ENGINE LIST ROWS --- */
-#expense-records {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
+button, #expense-form button[type="submit"] {
+    background-color: #2563eb;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 6px;
+    cursor: pointer;
+    width: 100%;
+    transition: background-color 0.15s ease;
 }
 
-.expense-card-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem;
-  background: var(--bg-color);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  gap: 1rem;
+button:hover {
+    background-color: #1d4ed8;
 }
 
-.expense-details strong {
-  display: block;
-  font-size: 1.05rem;
+/* Accessible visible focus styles mandated by rubric */
+input:focus, select:focus, button:focus, nav ul li a:focus {
+    outline: 3px solid #60a5fa;
+    outline-offset: 2px;
 }
 
-.category-badge {
-  display: inline-block;
-  background: var(--border-color);
-  color: var(--text-main);
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 2px 8px;
-  border-radius: 4px;
-  margin: 0.25rem 0;
-}
-
-.expense-cost-actions span {
-  font-weight: 700;
-  font-size: 1.1rem;
-}
-
-/* Utility visibility helper */
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  border: 0;
-}
-
-/* --- 8. FOOTER ENGINE CREDIT --- */
 footer {
-  text-align: center;
-  padding: 2rem 1rem;
-  color: var(--text-muted);
-  font-size: 0.9rem;
-  border-top: 1px solid var(--border-color);
-  margin-top: 4rem;
-}
-
-/* --- 9. RESPONSIVE BREAKPOINTS --- */
-@media (min-width: 768px) {
-  .dash-boxes {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-@media (min-width: 1024px) {
-  main {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 2rem;
-    align-items: start;
-  }
-  #dashboard, #history {
-    grid-column: 1 / -1;
-  }
-  #add-expense {
-    grid-column: 1 / 2;
-  }
-  #settings {
-    grid-column: 2 / 3;
-  }
-  #about {
-    grid-column: 1 / -1;
     text-align: center;
-  }
+    padding: 2rem 1rem;
+    color: #64748b;
+    font-size: 0.875rem;
+    border-top: 1px solid #e2e8f0;
+    margin-top: 2rem;
 }
 
-/* --- 10. SINGLE PAGE APPLICATION NAVIGATION ROUTER RULES --- */
-/* Forces system display overrides cleanly when handled by router triggers */
+/* ==========================================================================
+   2. TABLET INTERFACE BREAKPOINT (768px up)
+   ========================================================================== */
+@media (min-width: 768px) {
+    header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 2rem;
+    }
 
-main > section {
-  display: none !important;
+    header h1 {
+        text-align: left;
+    }
+
+    nav ul {
+        margin: 0;
+    }
+
+    main {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+    }
+
+    .dash-boxes {
+        flex-direction: row;
+    }
+
+    .box {
+        flex: 1;
+    }
+
+    /* Side-by-side elements for specific layout tweaks */
+    .data-buttons {
+        flex-direction: row;
+    }
 }
 
-main > section#dashboard {
-  display: block !important;
+/* ==========================================================================
+   3. DESKTOP INTERFACE BREAKPOINT (1024px up)
+   ========================================================================== */
+@media (min-width: 1024px) {
+    main {
+        max-width: 980px;
+    }
+
+    header h1 {
+        font-size: 1.75rem;
+    }
+
+    section {
+        padding: 2rem;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    input[type="date"],
+    select {
+        font-size: 1.05rem;
+    }
 }

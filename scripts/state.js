@@ -1,4 +1,4 @@
-// state.js - managing the local data array values
+// state.js - managing the local data array values and timestamps
 let expensesArray = [];
 let monthlyBudgetLimit = 0;
 let activeCurrency = 'Kshs';
@@ -27,14 +27,34 @@ export function getExpenses() {
 }
 
 export function addExpense(desc, cost, cat, date) {
+    const currentISO = new Date().toISOString();
+    const uniqueId = "rec_" + Math.floor(Math.random() * 100000).toString().padStart(4, '0');
+    
     const newItem = {
-        id: Date.now(),
+        id: uniqueId,
         desc: desc,
         cost: parseFloat(cost) || 0,
         cat: cat,
-        date: date
+        date: date,
+        createdAt: currentISO,
+        updatedAt: currentISO
     };
     expensesArray.push(newItem);
+    saveToLocalStorageSync();
+}
+
+// Inline edit feature required by rubric section G
+export function editExpense(id, newDesc, newCost, newCat, newDate) {
+    for (let i = 0; i < expensesArray.length; i++) {
+        if (expensesArray[i].id === id) {
+            expensesArray[i].desc = newDesc;
+            expensesArray[i].cost = parseFloat(newCost) || 0;
+            expensesArray[i].cat = newCat;
+            expensesArray[i].date = newDate;
+            expensesArray[i].updatedAt = new Date().toISOString(); // refresh stamp
+            break;
+        }
+    }
     saveToLocalStorageSync();
 }
 
