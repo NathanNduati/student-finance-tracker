@@ -6,7 +6,7 @@ This is a simple expense tracker built entirely with JavaScript, HTML, and CSS. 
 
 ### 🚀 Milestone 1 Submission Links
 * **🌐 Live Website Link:** [https://nathannduati.github.io/student-finance-tracker/](https://nathannduati.github.io/student-finance-tracker/)
-* **🎥 Video Walkthrough (Unlisted):** [https://youtu.be/WeNwLY2SP5c?si=ZrHeD1TqKcoVR8Su](https://youtu.be/WeNwLY2SP5c?si=ZrHeD1TqKcoVR8Su)
+* **🎥 Video Walkthrough (Unlisted):** [https://youtu.be/MF-SyYJ-Mwc](https://youtu.be/MF-SyYJ-Mwc)
 
 ---
 
