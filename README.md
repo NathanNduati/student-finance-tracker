@@ -1,6 +1,6 @@
 # 🎓 University Expense Tracker
 
-This is a simple, lightweight expense tracker built entirely with vanilla JavaScript, HTML, and CSS. I designed it to help university students manage their daily spending across different campus categories, set a budget, and look at their weekly spending habits without needing any external libraries or heavy frameworks.
+This is a simple expense tracker built entirely with JavaScript, HTML, and CSS. I designed it to help university students manage their daily spending across different campus categories, set a budget, and look at their weekly spending habits without needing any external libraries or heavy frameworks.
 
 ---
 
